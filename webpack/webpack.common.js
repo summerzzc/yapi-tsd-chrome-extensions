@@ -76,5 +76,8 @@ module.exports = {
   ],
   experiments: {
     asyncWebAssembly: true
-  }
+  },
+  externals: {
+    prettier: '{}',
+  },
 };
