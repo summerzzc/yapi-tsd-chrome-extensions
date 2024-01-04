@@ -3,7 +3,7 @@ const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 
 module.exports = {
   mode: "production",
-  devtool: "source-map",
+  devtool: false,
   plugins: [
     // Specify production API URL
     // new webpack.DefinePlugin({
