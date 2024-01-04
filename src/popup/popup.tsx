@@ -12,6 +12,7 @@ export default function Popup() {
    * 通过jsonSchemaString生成TypeScript声明
    */
   const jsonSchemaStringToTypeScriptDeclare = (jsonSchemaString: string, typeName: string) => {
+    // 如果有需要，可以在这里对jsonSchemaString进行处理,过滤一些不需要的内容
     const temporary = jsonSchemaString.replace(/注释\\n\\t/gim, '').replace(/<p>/gim, '');
     const result = jsonSchemaStringToJsonSchema(temporary, {});
     return jsonSchemaToType(result, typeName);
