@@ -9,6 +9,15 @@ export default function Popup() {
   const [typeScriptDeclare, setTypeScriptDeclare] = useState('');
 
   /**
+   * 通过jsonSchemaString生成TypeScript声明
+   */
+  const jsonSchemaStringToTypeScriptDeclare = (jsonSchemaString: string, typeName: string) => {
+    const temporary = jsonSchemaString.replace(/注释\\n\\t/gim, '').replace(/<p>/gim, '');
+    const result = jsonSchemaStringToJsonSchema(temporary, {});
+    return jsonSchemaToType(result, typeName);
+  }
+
+  /**
    * 点击生成
    * @returns promise<void>
    */
@@ -25,17 +34,16 @@ export default function Popup() {
       setResult(errmsg || '请先登录');
       return;
     }
-    const { req_body_other, path } = data;
-    const jsonSchemaString = req_body_other.replace(/注释\\n\\t/gim, '').replace(/<p>/gim, '');
-
-    // 通过transformer转换,会忽略掉description,放弃使用
-    // const b = await transformer({value:jsonSchemaString})
-
-    const result = jsonSchemaStringToJsonSchema(jsonSchemaString, {});
+    const { req_body_other, path, res_body } = data;
     const typeName = toPascalCase(path);
-    const typeScriptDeclare = await jsonSchemaToType(result, typeName);
-    console.log(typeScriptDeclare);
-    setTypeScriptDeclare(typeScriptDeclare);
+
+    // 入参的类型声明
+    const typeScriptDeclareParam = await jsonSchemaStringToTypeScriptDeclare(req_body_other, `${typeName}Param`);
+
+    // 出参的类型声明
+    const typeScriptDeclareRes = await jsonSchemaStringToTypeScriptDeclare(res_body, `${typeName}Res`);
+    
+    setTypeScriptDeclare(`${typeScriptDeclareParam}\n\n${typeScriptDeclareRes}`);
     console.timeEnd('jsonSchemaStringToJsonSchema');
     setLoading(false);
   };
