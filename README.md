@@ -3,7 +3,21 @@ yapi的ts声明谷歌插件
 
 ## 说明
 - 本插件基于yapi的插件，方便生成单个接口的ts声明. 如果你需要的是整个项目的ts声明文件，可以使用[YApi to TypeScript](https://fjc0k.github.io/yapi-to-typescript/handbook/)
-- 本项目使用[web-extension-template](https://github.com/fregante/browser-extension-template)脚手架生成
+- 本项目使用[web-extension-template](https://github.com/fregante/browser-extension-template)模版生成
+
+## 目录结构
+```
+├── dist/                     # 打包后的文件
+├── src/                      # 源码
+│   ├── config/               # 项目配置文件
+│   ├── assets/               # 静态资源
+│   ├── popup/                # 弹出页
+│   ├── types/                # 类型声明
+│   ├── utils/                # 工具函数
+│   ├── manifest.json         # 谷歌配置文件
+│   └── index.tsx             # 入口文件
+...
+```
 
 ## 安装
 - 下载本项目

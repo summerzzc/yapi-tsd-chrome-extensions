@@ -29,6 +29,7 @@ module.exports = {
     }
   },
 
+  // 配置loader
   module: {
     rules: [
       // Loader for ts, tsx, js and jsx files
@@ -69,7 +70,11 @@ module.exports = {
           from: __dirname + "/src/assets/images",
           to: "dist/assets/images",
           noErrorOnMissing: true
-        }
+        },
+        {
+          from: path.join(srcDir, 'manifest.json'),
+          to: path.join(__dirname, '../dist')
+        },
       ]
     }),
     new NodePolyfillPlugin()

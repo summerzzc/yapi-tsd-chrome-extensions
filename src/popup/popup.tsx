@@ -1,41 +1,29 @@
 import React, { useState } from 'react';
 import './popup.css';
 
-import { jsonSchemaStringToJsonSchema, transformer, jsonSchemaToType, toPascalCase, getUrlParams } from '../utils';
+import { jsonSchemaStringToTypeScriptDeclare, transformer, toPascalCase, getUrlResult } from '../utils';
 
 export default function Popup() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
   const [typeScriptDeclare, setTypeScriptDeclare] = useState('');
 
-  /**
-   * 通过jsonSchemaString生成TypeScript声明
-   */
-  const jsonSchemaStringToTypeScriptDeclare = (jsonSchemaString: string, typeName: string) => {
-    // 如果有需要，可以在这里对jsonSchemaString进行处理,过滤一些不需要的内容
-    const temporary = jsonSchemaString.replace(/注释\\n\\t/gim, '').replace(/<p>/gim, '');
-    const result = jsonSchemaStringToJsonSchema(temporary, {});
-    return jsonSchemaToType(result, typeName);
-  }
-
-  /**
-   * 点击生成
-   * @returns promise<void>
-   */
+  /** 点击生成*/
   const handleGenerate = async () => {
     if (loading) {
       return;
     }
     setLoading(true);
     console.time('jsonSchemaStringToJsonSchema');
-    const res = await getUrlParams();
-    console.log(res);
+    // 获取数据
+    const res = await getUrlResult();
     const { errcode, data, errmsg } = res;
     if (errcode !== 0) {
       setResult(errmsg || '请先登录');
       return;
     }
     const { req_body_other, path, res_body } = data;
+    // 获取接口名称
     const typeName = toPascalCase(path);
 
     // 入参的类型声明
@@ -43,8 +31,10 @@ export default function Popup() {
 
     // 出参的类型声明
     const typeScriptDeclareRes = await jsonSchemaStringToTypeScriptDeclare(res_body, `${typeName}Res`);
-    
+
+    // 拼接出入参类型声明
     setTypeScriptDeclare(`${typeScriptDeclareParam}\n\n${typeScriptDeclareRes}`);
+
     console.timeEnd('jsonSchemaStringToJsonSchema');
     setLoading(false);
   };
@@ -57,11 +47,9 @@ export default function Popup() {
     // 复制到剪切板
     navigator.clipboard.writeText(typeScriptDeclare).then(
       () => {
-        console.log('复制成功');
         setResult('复制成功');
       },
       () => {
-        console.log('复制失败');
         setResult('复制失败');
       }
     );

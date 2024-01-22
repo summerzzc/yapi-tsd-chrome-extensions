@@ -52,13 +52,12 @@ export function traverseJsonSchema(
 
   // Mock.toJSONSchema 产生的 properties 为数组，然而 JSONSchema4 的 properties 为对象
   if (isArray(jsonSchema.properties)) {
-    jsonSchema.properties = (jsonSchema.properties as JSONSchema4[]).reduce<Exclude<JSONSchema4['properties'], undefined | null>>(
-      (props, js) => {
-        props[js.name] = js;
-        return props;
-      },
-      {}
-    );
+    jsonSchema.properties = (jsonSchema.properties as JSONSchema4[]).reduce<
+      Exclude<JSONSchema4['properties'], undefined | null>
+    >((props, js) => {
+      props[js.name] = js;
+      return props;
+    }, {});
   }
 
   // 处理传入的 JSONSchema
@@ -103,7 +102,6 @@ export function processJsonSchema(
   customTypeMapping: Record<string, JSONSchema4TypeName>
 ): JSONSchema4 {
   return traverseJsonSchema(jsonSchema, (jsonSchema) => {
-    // 删除通过 swagger 导入时未剔除的 ref
     delete jsonSchema.$ref;
     delete jsonSchema.$$ref;
 
@@ -116,10 +114,10 @@ export function processJsonSchema(
     if (jsonSchema.type) {
       // 类型映射表，键都为小写
       const typeMapping: Record<string, JSONSchema4TypeName> = {
-        byte: 'integer',
-        short: 'integer',
-        int: 'integer',
-        long: 'integer',
+        byte: 'number',
+        short: 'number',
+        int: 'number',
+        long: 'number',
         float: 'number',
         double: 'number',
         bigdecimal: 'number',
@@ -138,7 +136,7 @@ export function processJsonSchema(
       jsonSchema.type = isMultiple ? types : types[0];
     }
 
-    // 移除字段名称首尾空格
+    // 移除字段名称首尾空格(防止报错)
     if (jsonSchema.properties) {
       forOwn(jsonSchema.properties, (_, prop) => {
         const propDef = jsonSchema.properties![prop];
@@ -243,9 +241,9 @@ export async function jsonSchemaToType(jsonSchema: JSONSchema4, typeName: string
  * 根据 JSONSchema 字符串生产 TypeScript 类型定义。
  * @deprecated 请使用 `jsonSchemaToType`, transformer不满足需求
  */
-export const transformer = async ({ value }: any) => {
+export const transformer = async (value: any, typeName: string) => {
   return run(
-    'Root',
+    typeName,
     value,
     JSON.stringify({
       output_mode: true ? 'typescript/typealias' : 'typescript',
@@ -254,9 +252,9 @@ export const transformer = async ({ value }: any) => {
 };
 
 /**
- * 根据当前浏览器路径,请求参数
+ * 根据当前浏览器路径,请求结果
  */
-export const getUrlParams = async ():Promise<any> => {
+export const getUrlResult = async (): Promise<any> => {
   const url = await getCurrentUrl();
   const urlArr = url.split('/');
   const id = urlArr[urlArr.length - 1];
@@ -267,8 +265,7 @@ export const getUrlParams = async ():Promise<any> => {
     headers: {
       Cookie: cookieString,
     },
-  })
-  .then(response => response.json());
+  }).then((response) => response.json());
 };
 
 /**
@@ -289,9 +286,18 @@ export const getCurrentUrl = () => {
  */
 export const getCookie = () => {
   return new Promise<string>((resolve, reject) => {
-    chrome.cookies.getAll({ domain: yapiDomain}, function (cookies) {
+    chrome.cookies.getAll({ domain: yapiDomain }, function (cookies) {
       const cookieString = cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; ');
       resolve(cookieString);
     });
   });
-}
+};
+
+/** 通过jsonSchemaString生成TypeScript声明 */
+export const jsonSchemaStringToTypeScriptDeclare = (jsonSchemaString: string, typeName: string) => {
+  // 如果有需要，可以在这里对jsonSchemaString进行处理,过滤一些不需要的内容
+  const temporary = jsonSchemaString.replace(/注释\\n\\t/gim, '').replace(/<p>/gim, '').replace('integer', 'byte');
+  console.log(JSON.stringify(temporary));
+  const result = jsonSchemaStringToJsonSchema(temporary, {});
+  return jsonSchemaToType(result, typeName);
+};
